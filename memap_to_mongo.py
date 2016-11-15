@@ -24,12 +24,29 @@ def main(arguments):
     infile_contents = args.infile.read()
     infile_object = json.loads(infile_contents)
     args.infile.close()
+    summary = None
+    summary_index = None
+    for i in range(len(infile_object)):
+        if 'summary' in infile_object[i]:
+            summary = infile_object[i]['summary']
+            summary_index = i
+            break
+
+    result_object = infile_object
+    if summary != None:
+        result_object = {
+            'summary': summary,
+            'modules': [x for i,x in enumerate(infile_object) if i != summary_index]
+        }
+    else:
+        print "WARNING: Couldn't find the 'summary' section, using the input file unchanged"
+
     
     built_binary = {
         'name': args.name,
         'target': args.mcu,
         'toolchain': args.toolchain,
-        'sizes': infile_object
+        'sizes': result_object
     }    
     
     update_string = 'db.%s.update({"number": %d}, {$push: {"built_binaries": %s}})' % (args.collection, args.build, json.dumps(built_binary))
